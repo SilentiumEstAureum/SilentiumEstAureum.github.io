@@ -4,8 +4,114 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SilentiumEstAureum</title>
+
+    <style>
+        .item {
+            height:300px;
+            overflow: hidden;
+            background: #4DC7A0;
+            /*border: 1px dashed #4DC7A0;*/
+            color: #fefefe;
+            display: flex;
+            justify-content: center;
+            align-content: center;
+            }
+
+            .container {
+            width: 100%;
+            overflow: hidden;
+            }
+
+            .texts {
+            position: absolute;
+            height:50%;
+            background: rgba(0, 0, 0, 0.8);
+            top: 50%;
+            text-align: left;
+            width:100%;
+            padding-left: 20px;
+            }
+
+            p, h2 {
+            width: 90%;
+            }
+    </style>
 </head>
 <body>
+    <script>
+        var xmlhttp = new XMLHttpRequest();
+
+        //Url with the Json
+        var url = "https://api.rss2json.com/v1/api.json?rss_url=https://medium.com/feed/@medium/";
+
+        xmlhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            var myJson = JSON.parse(this.responseText);
+            createCarousel(myJson);
+        }
+        };
+
+        xmlhttp.open("GET", url, true);
+        xmlhttp.send();
+
+        function getImage( str ) {
+        //Regular expression to find image source attribute
+        var regex = /<img.*?src=['"](.*?)['"]/;
+        try {
+            return regex.exec(str.substr(0,1200))[1];
+        } catch(err) {
+            return -1;
+        }
+        }
+
+        function createCarousel(myJson) {
+        var out = "";
+        var i;
+        
+        for(i = 0; i < myJson.items.length; i++) {
+            //Create div item
+            var item = document.createElement('div');
+            item.classList.add('item');
+            
+            var container = document.createElement('div');
+            container.classList.add('container');
+            
+            //Create image if there's a image
+            var postImg = document.createElement('img');
+            if(getImage( myJson.items[i].description ) !== -1) {
+            postImg.src = getImage( myJson.items[i].description );
+            postImg.classList.add('itemImg');
+            }
+            
+            //Create Title
+            var title = document.createElement('h2');
+            title.appendChild(document.createTextNode( myJson.items[i].title));
+            var description = document.createElement('p');
+            description.appendChild(document.createTextNode( myJson.items[i].description));
+            
+            var texts = document.createElement('div');
+            texts.classList.add('texts')
+            texts.appendChild(title);
+            
+            //This line is grabing the text and removing the figures, I'm also limiting the text to the 200 firts characters
+            texts.insertAdjacentHTML( 'beforeend', myJson.items[i].description.replace(/<figure>.*?<\/figure>/g,"").substring(0,200)+'...' );
+            
+            //inserting elements into item
+            container.appendChild(postImg);
+            container.appendChild(texts);
+            item.appendChild(container);
+            out += item.outerHTML;
+        }
+        
+        //Insert everything back to our website
+        document.getElementById("blog").innerHTML = out;
+        
+    </script>
     <h1>Silentium Est Aureum - Coming Soon</h1>
+
+    <div class="owl-carousel owl-theme" id="blog"></div>
+    <footer>
+    <p>Medium Article carousel by Thiago Fontes</p>
+    </footer>
 </body>
 </html>
